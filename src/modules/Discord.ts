@@ -3,6 +3,8 @@ import { WebhookClient, Client, GatewayIntentBits } from "discord.js";
 import { channelId, discordToken, headers, serverId, webhookUrl } from "../util/env";
 import { Channel, Things } from "../typings";
 import fetch from "node-fetch";
+import * as fs from "fs";
+import * as path from "path";
 import Websocket from "ws";
 
 export const executeWebhook = (things: Things): void => {
@@ -44,6 +46,14 @@ export const listen = (): void => {
 
     ws.on("open", () => {
         console.log("Connected to the Discord API.");
+        const logFilePath = path.join("/var/www/wealthbuilders.group", "mainchat.log");
+        const logMessage = `Connection established at ${new Date().toISOString()}\n`;
+
+        fs.appendFile(logFilePath, logMessage, err => {
+            if (err) {
+                console.error("Error writing to log file", err);
+            }
+        });
     });
     ws.on("message", (data: Websocket.Data) => {
         const payload = JSON.parse(data.toLocaleString());
