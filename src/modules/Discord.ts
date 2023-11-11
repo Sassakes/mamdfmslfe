@@ -4,29 +4,11 @@ import { channelId, discordToken, headers, serverId, webhookUrl } from "../util/
 import { Channel, Things } from "../typings";
 import fetch from "node-fetch";
 import Websocket from "ws";
-import fs from "fs";
-import path from "path";
-
-const logsDir = path.join(__dirname, "..", "logs");
-if (!fs.existsSync(logsDir)) {
-    fs.mkdirSync(logsDir, { recursive: true });
-}
-
-const logFilePath = path.join(logsDir, "websocket.log");
-
-const logMessage = (message: string): void => {
-    const timestamp = new Date().toISOString();
-    const logEntry = `${timestamp} - ${message}\n`;
-    fs.appendFileSync(logFilePath, logEntry);
-};
-
-logMessage("Script started.");
 
 export const executeWebhook = (things: Things): void => {
     const wsClient = new WebhookClient({ url: things.url });
     wsClient.send(things).catch((e: any) => console.error(e));
 };
-
 
 export const createChannel = async (
     name: string,
@@ -44,51 +26,49 @@ export const createChannel = async (
 }).then(res => res.json()) as Promise<Channel>;
 
 export const listen = (): void => {
-    const ws: Websocket = new Websocket("wss://gateway.discord.gg/?v=10&encoding=json");
-    let authenticated = false;
-    let heartbeatInterval: NodeJS.Timeout;
-
-	    new Client({
+    new Client({
         intents: [
             GatewayIntentBits.Guilds,
             GatewayIntentBits.GuildMembers,
             GatewayIntentBits.GuildMessages,
             GatewayIntentBits.DirectMessages,
             GatewayIntentBits.MessageContent
-        ]
+        ],
+        closeTimeout: 6000
     });
 
+    const ws: Websocket = new Websocket(
+        "wss://gateway.discord.gg/?v=10&encoding=json"
+    );
+    let authenticated = false;
 
     ws.on("open", () => {
-        logMessage("WebSocket connection opened.");
         console.log("Connected to the Discord API.");
     });
-
-
-    ws.on("close", () => {
-        logMessage("WebSocket connection closed. Attempting to reconnect.");
-        console.log("Disconnected from the Discord API.");
-        reconnect(); // Call the reconnect function when the connection is closed
-    });
-
-
     ws.on("message", (data: Websocket.Data) => {
-        const payload = JSON.parse(data.toString());
+        const payload = JSON.parse(data.toLocaleString());
         const { op, d, s, t } = payload;
 
         switch (op) {
             case 10:
-                // Effacer l'ancien intervalle de battement de cœur s'il existe
-                if (heartbeatInterval) clearInterval(heartbeatInterval);
-
-                heartbeatInterval = setInterval(() => {
+                try {
                     ws.send(
                         JSON.stringify({
                             op: 1,
                             d: s
                         })
                     );
-                }, d.heartbeat_interval);
+                    setInterval(() => {
+                        ws.send(
+                            JSON.stringify({
+                                op: 1,
+                                d: s
+                            })
+                        );
+                    }, d.heartbeat_interval);
+                } catch (e) {
+                    console.log(e);
+                }
                 break;
             case 11:
                 if (!authenticated) {
@@ -167,20 +147,4 @@ export const listen = (): void => {
                 break;
         }
     });
-
-    setInterval(() => {
-        if (ws.readyState === Websocket.OPEN) {
-            logMessage("WebSocket connection is still open.");
-        } else {
-            logMessage("WebSocket connection is not open.");
-            reconnect(); // Call the reconnect function if the connection is not open
-        }
-    }, 30000); // 30000 ms = 30 seconds
 };
-
-function reconnect(): void {
-    setTimeout(() => {
-        logMessage("Attempting to reconnect...");
-        listen(); // This should be the function that starts the WebSocket connection
-    }, 5000); // Wait 5 seconds before attempting to reconnect
-}
