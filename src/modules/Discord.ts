@@ -4,32 +4,23 @@ import { channelId, discordToken, headers, serverId, webhookUrl } from "../util/
 import { Channel, Things } from "../typings";
 import fetch from "node-fetch";
 import Websocket from "ws";
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
-const logsDir = path.join(__dirname, '..', 'logs');
-if (!fs.existsSync(logsDir)){
+const logsDir = path.join(__dirname, "..", "logs");
+if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
 }
 
-const logFilePath = path.join(logsDir, 'websocket.log');
+const logFilePath = path.join(logsDir, "websocket.log");
 
 const logMessage = (message: string): void => {
-  const timestamp = new Date().toISOString();
-  const logEntry = `${timestamp} - ${message}\n`;
-  fs.appendFileSync(logFilePath, logEntry);
+    const timestamp = new Date().toISOString();
+    const logEntry = `${timestamp} - ${message}\n`;
+    fs.appendFileSync(logFilePath, logEntry);
 };
 
-logMessage('Script started.');
-
-function functionName(): void {
-    setTimeout(() => {
-        logMessage('Tentative de reconnexion...');
-        listen();
-    }, 5000); // Attend 5 secondes avant de tenter de se reconnecter
-}
-
-
+logMessage("Script started.");
 
 export const executeWebhook = (things: Things): void => {
     const wsClient = new WebhookClient({ url: things.url });
@@ -53,28 +44,36 @@ export const createChannel = async (
 }).then(res => res.json()) as Promise<Channel>;
 
 export const listen = (): void => {
-
-     const ws: Websocket = new Websocket(
-        "wss://gateway.discord.gg/?v=10&encoding=json"
-    );
+    const ws: Websocket = new Websocket("wss://gateway.discord.gg/?v=10&encoding=json");
     let authenticated = false;
-    let heartbeatInterval: NodeJS.Timeout; // Pour stocker l'intervalle de battement de cœur
+    let heartbeatInterval: NodeJS.Timeout;
 
-	
-    ws.on('open', () => {
-        logMessage('WebSocket connection opened.');
-        console.log('Connected to the Discord API.');
+	    new Client({
+        intents: [
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMembers,
+            GatewayIntentBits.GuildMessages,
+            GatewayIntentBits.DirectMessages,
+            GatewayIntentBits.MessageContent
+        ]
     });
 
 
-    ws.on('close', () => {
-        logMessage('WebSocket connection closed. Attempting to reconnect.');
-        console.log('Disconnected from the Discord API.');
-        reconnect(); // Appeler la fonction de reconnexion
+    ws.on("open", () => {
+        logMessage("WebSocket connection opened.");
+        console.log("Connected to the Discord API.");
     });
+
+
+    ws.on("close", () => {
+        logMessage("WebSocket connection closed. Attempting to reconnect.");
+        console.log("Disconnected from the Discord API.");
+        reconnect(); // Call the reconnect function when the connection is closed
+    });
+
 
     ws.on("message", (data: Websocket.Data) => {
-        const payload = JSON.parse(data.toLocaleString());
+        const payload = JSON.parse(data.toString());
         const { op, d, s, t } = payload;
 
         switch (op) {
@@ -171,10 +170,17 @@ export const listen = (): void => {
 
     setInterval(() => {
         if (ws.readyState === Websocket.OPEN) {
-            logMessage('WebSocket connection is still open.');
+            logMessage("WebSocket connection is still open.");
         } else {
-            logMessage('WebSocket connection is not open.');
-            reconnect(); // Appeler la fonction de reconnexion
+            logMessage("WebSocket connection is not open.");
+            reconnect(); // Call the reconnect function if the connection is not open
         }
-    }, 30000); // 30000 ms = 30 secondes
+    }, 30000); // 30000 ms = 30 seconds
 };
+
+function reconnect(): void {
+    setTimeout(() => {
+        logMessage("Attempting to reconnect...");
+        listen(); // This should be the function that starts the WebSocket connection
+    }, 5000); // Wait 5 seconds before attempting to reconnect
+}
