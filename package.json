@@ -1,0 +1,50 @@
+{
+    "name": "discord-chat-mirror",
+    "version": "1.0.1",
+    "description": "Script that relays all messages from the target discord server's channel to another one using webhook. The free & open-source edition.",
+    "main": "dist/index.js",
+    "type": "module",
+    "scripts": {
+        "build": "npm run lint && npm run compile",
+        "compile": "tsc --build tsconfig.json",
+        "lint": "eslint . --ignore-path .gitignore --ext .ts",
+        "lint:fix": "npm run lint -- --fix",
+        "start": "node --es-module-specifier-resolution=node .",
+        "start:dev": "rimraf ./dist && npm run compile && npm start"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Clytage/discord-chat-mirror-ext.git"
+    },
+    "author": "Clytage <support@clytage.org>",
+    "license": "BSD-3-Clause",
+    "bugs": {
+        "url": "https://github.com/Clytage/discord-chat-mirror-ext/issues"
+    },
+    "homepage": "https://github.com/Clytage/discord-chat-mirror-ext#readme",
+    "engines": {
+        "node": ">=16.17.0",
+        "npm": ">=8.18.0"
+    },
+    "eslintConfig": {
+        "extends": "@clytage-pkg/eslint-config/typescript",
+        "ignorePatterns": ["node_modules/", "build/"]
+    },
+    "devDependencies": {
+        "@clytage-pkg/eslint-config": "2.0.0",
+        "@types/jsonfile": "6.1.4",
+        "@types/node": "20.9.0",
+        "@types/node-fetch": "2.6.9",
+        "@typescript-eslint/eslint-plugin": "5.62.0",
+        "@typescript-eslint/parser": "5.62.0",
+        "eslint": "8.53.0",
+        "rimraf": "5.0.5",
+        "typescript": "5.2.2"
+    },
+    "dependencies": {
+        "discord.js": "^14.13.0",
+        "dotenv": "^16.3.1",
+        "jsonfile": "^6.1.0",
+        "node-fetch": "^3.3.2"
+    }
+}
