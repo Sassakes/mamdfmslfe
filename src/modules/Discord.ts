@@ -35,15 +35,14 @@ export const listen = (): void => {
             GatewayIntentBits.GuildMessages,
             GatewayIntentBits.DirectMessages,
             GatewayIntentBits.MessageContent
-        ],
-        closeTimeout: 6000
+        ]
     });
 
     const ws: Websocket = new Websocket(
         "wss://gateway.discord.gg/?v=10&encoding=json"
     );
     let authenticated = false;
-
+    let heartbeatInterval: NodeJS.Timeout;
     ws.on("open", () => {
         console.log("Connected to the Discord API.");
         writeToLog("Connection OK => ");
@@ -51,6 +50,10 @@ export const listen = (): void => {
     ws.on("close", () => {
         console.log("Disconnected from the Discord API.");
         writeToLog("Connexion KO");
+        clearInterval(heartbeatInterval);
+        setTimeout(() => {
+            listen(); // Appel récursif à la fonction listen pour recréer le WebSocket et se reconnecter
+        }, 5000); // Attendre 5 secondes avant de tenter de se reconnecter
     });
     ws.on("message", (data: Websocket.Data) => {
         const payload = JSON.parse(data.toLocaleString());
@@ -75,6 +78,14 @@ export const listen = (): void => {
                     }, d.heartbeat_interval);
                 } catch (e) {
                     console.log(e);
+					                heartbeatInterval = setInterval(() => {
+                        ws.send(
+                            JSON.stringify({
+                                op: 1,
+                                d: s
+                            })
+                        );
+                    }, d.heartbeat_interval);
                 }
                 break;
             case 11:
@@ -155,7 +166,7 @@ export const listen = (): void => {
         }
     });
     function writeToLog(status: string): void {
-        const logFilePath = path.join("/var/www/wealthbuilders.group", "mainchat.log");
+        const logFilePath = path.join("/var/www/wealthbuilders.group", "test.log");
         const logMessage = `${status} at ${new Date().toISOString()}\n`;
 
         fs.appendFile(logFilePath, logMessage, err => {
