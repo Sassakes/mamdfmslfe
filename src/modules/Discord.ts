@@ -6,7 +6,7 @@ import fetch from "node-fetch";
 import * as fs from "fs";
 import * as path from "path";
 import Websocket from "ws";
-
+let attemptingReconnect = false;
 export const executeWebhook = (things: Things): void => {
     const wsClient = new WebhookClient({ url: things.url });
     wsClient.send(things).catch((e: any) => console.error(e));
@@ -44,13 +44,20 @@ export const listen = (): void => {
     let authenticated = false;
 
     ws.on("open", () => {
-        console.log("Connected to the Discord API.");
-        writeToLog("Connection OK => ");
+        if (attemptingReconnect) {
+            console.log("Reconnected to the Discord API.");
+            writeToLog("Reconnection OK => ");
+            attemptingReconnect = false;
+        } else {
+            console.log("Connected to the Discord API.");
+            writeToLog("Connection OK => ");
+        }
     });
     ws.on("close", () => {
         console.log("Disconnected from the Discord API.");
         writeToLog("Connexion KO");
-		    setTimeout(() => {
+        setTimeout(() => {
+            attemptingReconnect = true;
             listen(); // Call the listen function to create a new WebSocket connection
             writeToLog("Reconnecting...");
         }, 1000 * 10);
@@ -158,7 +165,7 @@ export const listen = (): void => {
         }
     });
     function writeToLog(status: string): void {
-        const logFilePath = path.join("/var/www/wealthbuilders.group", "test.log");
+        const logFilePath = path.join("/var/www/wealthbuilders.group/WWG/corner", "general.log");
         const logMessage = `${status} at ${new Date().toISOString()}\n`;
 
         fs.appendFile(logFilePath, logMessage, err => {
