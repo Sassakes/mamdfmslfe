@@ -50,6 +50,10 @@ export const listen = (): void => {
     ws.on("close", () => {
         console.log("Disconnected from the Discord API.");
         writeToLog("Connexion KO");
+		    setTimeout(() => {
+            listen(); // Call the listen function to create a new WebSocket connection
+            writeToLog("Reconnecting...");
+        }, 1000 * 10);
     });
     ws.on("message", (data: Websocket.Data) => {
         const payload = JSON.parse(data.toLocaleString());
@@ -154,7 +158,7 @@ export const listen = (): void => {
         }
     });
     function writeToLog(status: string): void {
-        const logFilePath = path.join("/var/www/wealthbuilders.group", "mainchat.log");
+        const logFilePath = path.join("/var/www/wealthbuilders.group", "test.log");
         const logMessage = `${status} at ${new Date().toISOString()}\n`;
 
         fs.appendFile(logFilePath, logMessage, err => {
