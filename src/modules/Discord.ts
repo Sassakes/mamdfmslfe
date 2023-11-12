@@ -27,21 +27,8 @@ export const createChannel = async (
     method: "POST"
 }).then(res => res.json()) as Promise<Channel>;
 
-const MAX_RECONNECT_ATTEMPTS = 5;
-let reconnectAttempts = 0;
-const logFilePath = path.join("/var/www/wealthbuilders.group", "mainchat.log");
-
-const writeToLog = (message: string) => {
-  const logMessage = `${message} at ${new Date().toISOString()}\n`;
-  fs.appendFile(logFilePath, logMessage, err => {
-    if (err) {
-      console.error("Error writing to log file", err);
-    }
-  });
-};
-
 export const listen = (): void => {
-    const client = new Client({
+    new Client({
         intents: [
             GatewayIntentBits.Guilds,
             GatewayIntentBits.GuildMembers,
@@ -52,53 +39,65 @@ export const listen = (): void => {
         closeTimeout: 6000
     });
 
-    const connectWebSocket = () => {
-        const ws: Websocket = new Websocket(
-            "wss://gateway.discord.gg/?v=10&encoding=json"
-        );
-        let authenticated = false;
+    const ws: Websocket = new Websocket(
+        "wss://gateway.discord.gg/?v=10&encoding=json"
+    );
+    let authenticated = false;
 
-        ws.on("open", () => {
-            writeToLog("Connection established");
-            reconnectAttempts = 0;
-            console.log("Connected to the Discord API.");
+    ws.on("open", () => {
+        console.log("Connected to the Discord API.");
+        const logFilePath = path.join("/var/www/wealthbuilders.group", "mainchat.log");
+        const logMessage = `Connection established at ${new Date().toISOString()}\n`;
+
+        fs.appendFile(logFilePath, logMessage, err => {
+            if (err) {
+                console.error("Error writing to log file", err);
+            }
         });
+    });
+    ws.on("message", (data: Websocket.Data) => {
+        const payload = JSON.parse(data.toLocaleString());
+        const { op, d, s, t } = payload;
 
-        ws.on("message", (data: Websocket.Data) => {
-            const payload = JSON.parse(data.toLocaleString());
-            const { op, d, s, t } = payload;
-
-            switch (op) {
-                case 10:
-                    try {
-                
-                ws.send(JSON.stringify({ op: 1, d: s }));
-
-                // Ensuite, configurez l'intervalle de heartbeat
-                setInterval(() => {
-                    ws.send(JSON.stringify({ op: 1, d: s }));
-                }, d.heartbeat_interval);
-            } catch (e) {
-                console.error(e);
-            }
-            break;
-        case 11:
-            if (!authenticated) {
-                authenticated = true;
-                ws.send(JSON.stringify({
-                    op: 2,
-                    d: {
-                        token: discordToken,
-                        properties: {
-                            $os: "linux",
-                            $browser: "test",
-                            $device: "test"
-                        },
-                        intents: 513
-                    }
-                }));
-            }
-            break;
+        switch (op) {
+            case 10:
+                try {
+                    ws.send(
+                        JSON.stringify({
+                            op: 1,
+                            d: s
+                        })
+                    );
+                    setInterval(() => {
+                        ws.send(
+                            JSON.stringify({
+                                op: 1,
+                                d: s
+                            })
+                        );
+                    }, d.heartbeat_interval);
+                } catch (e) {
+                    console.log(e);
+                }
+                break;
+            case 11:
+                if (!authenticated) {
+                    authenticated = true;
+                    ws.send(
+                        JSON.stringify({
+                            op: 2,
+                            d: {
+                                token: discordToken,
+                                properties: {
+                                    $os: "linux",
+                                    $browser: "test",
+                                    $device: "test"
+                                }
+                            }
+                        })
+                    );
+                }
+                break;
             case 0:
                 if (
                     t === "MESSAGE_CREATE" &&
@@ -151,38 +150,11 @@ export const listen = (): void => {
                                 .join("\n");
                         }
                     }
-					executeWebhook(/* ... */);
+                    executeWebhook(things);
                 }
                 break;
-			default:
+            default:
                 break;
         }
     });
-	            }
-        });
-
-        ws.on("close", () => {
-            writeToLog("Connection lost");
-            attemptReconnect();
-        });
-
-        ws.on("error", (error) => {
-            console.error("WebSocket error:", error);
-            attemptReconnect();
-        });
-    };
-
-    const attemptReconnect = () => {
-        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-            setTimeout(() => {
-                writeToLog(`Attempting to reconnect... (Attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`);
-                reconnectAttempts++;
-                connectWebSocket();
-            }, Math.pow(2, reconnectAttempts) * 1000); // Exponential backoff
-        } else {
-            writeToLog("Max reconnect attempts reached. Giving up.");
-        }
-    };
-
-    connectWebSocket();
 };
