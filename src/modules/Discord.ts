@@ -46,14 +46,11 @@ export const listen = (): void => {
 
     ws.on("open", () => {
         console.log("Connected to the Discord API.");
-        const logFilePath = path.join("/var/www/wealthbuilders.group", "mainchat.log");
-        const logMessage = `Connection established at ${new Date().toISOString()}\n`;
-
-        fs.appendFile(logFilePath, logMessage, err => {
-            if (err) {
-                console.error("Error writing to log file", err);
-            }
-        });
+        writeToLog("Connection OK => ");
+    });
+    ws.on("close", () => {
+        console.log("Disconnected from the Discord API.");
+        writeToLog("Connexion KO");
     });
     ws.on("message", (data: Websocket.Data) => {
         const payload = JSON.parse(data.toLocaleString());
@@ -157,4 +154,14 @@ export const listen = (): void => {
                 break;
         }
     });
+    function writeToLog(status: string): void {
+        const logFilePath = path.join("/var/www/wealthbuilders.group", "mainchat.log");
+        const logMessage = `${status} at ${new Date().toISOString()}\n`;
+
+        fs.appendFile(logFilePath, logMessage, err => {
+            if (err) {
+                console.error("Error writing to log file", err);
+            }
+        });
+    }
 };
