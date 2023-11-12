@@ -28,7 +28,7 @@
     },
     "eslintConfig": {
         "extends": "@clytage-pkg/eslint-config/typescript",
-        "ignorePatterns": "dist/*"
+        "ignorePatterns": ["node_modules/", "build/"]
     },
     "devDependencies": {
         "@clytage-pkg/eslint-config": "2.0.0",
