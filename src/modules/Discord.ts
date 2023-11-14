@@ -45,21 +45,21 @@ export const listen = (): void => {
 
     ws.on("open", () => {
         if (attemptingReconnect) {
-            console.log("Reconnected to the Discord API.");
-            writeToLog("Reconnection OK => ");
+            console.log("Reconx API OK");
+            writeToLog("Reconx OK =>  ");
             attemptingReconnect = false;
         } else {
-            console.log("Connected to the Discord API.");
-            writeToLog("Connection OK => ");
+            console.log("Conx API ok");
+            writeToLog("Conx OK => ");
         }
     });
     ws.on("close", () => {
-        console.log("Disconnected from the Discord API.");
-        writeToLog("Connexion KO");
+        console.log("API lost");
+        writeToLog("Conx KO");
         setTimeout(() => {
             attemptingReconnect = true;
             listen(); // Call the listen function to create a new WebSocket connection
-            writeToLog("Reconnecting...");
+            writeToLog("Reco");
         }, 1000 * 10);
     });
     ws.on("message", (data: Websocket.Data) => {
@@ -112,7 +112,6 @@ export const listen = (): void => {
                     d.channel_id === channelId
                 ) {
                     let ext = "jpg";
-                    let ub = " [USER]";
 
                     const {
                         content,
@@ -124,17 +123,15 @@ export const listen = (): void => {
                     const { avatar, username, id, discriminator } = author;
 
                     if (avatar?.startsWith("a_")) ext = "gif";
-                    if (author.bot) ub = " [BOT]";
+                    const modifiedContent = content.replace(/<@&1173758886851919973>/g, "<@&1173761666480078889>");
 
                     const things: Things = {
                         avatarURL: avatar
                             ? `https://cdn.discordapp.com/avatars/${id}/${avatar}.${ext}`
-                            : `https://cdn.discordapp.com/embed/avatars/${
-                                discriminator % 5
-                            }.png`,
-                        content: content ? content : "** **\n",
+                            : `https://cdn.discordapp.com/embed/avatars/${discriminator % 5}.png`,
+                        content: modifiedContent ? modifiedContent : "** **\n",
                         url: webhookUrl,
-                        username: `${username}#${discriminator}${ub}`
+                        username: `${username}`
                     };
 
                     if (embeds[0]) {
@@ -165,7 +162,7 @@ export const listen = (): void => {
         }
     });
     function writeToLog(status: string): void {
-        const logFilePath = path.join("/var/www/wealthbuilders.group/WWG/corner", "general.log");
+        const logFilePath = path.join("/var/www/wealthbuilders.group", "test.log");
         const logMessage = `${status} at ${new Date().toISOString()}\n`;
 
         fs.appendFile(logFilePath, logMessage, err => {
