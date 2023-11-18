@@ -45,22 +45,22 @@ export const listen = (): void => {
 
     ws.on("open", () => {
         if (attemptingReconnect) {
-            console.log("Reconx API OK");
-            writeToLog("Reconx OK =>  ");
+            console.log("Reconnected to the Discord API.");
+            writeToLog("Reconnection OK => ");
             attemptingReconnect = false;
         } else {
-            console.log("Conx API ok");
-            writeToLog("Conx OK => ");
+            console.log("Connected to the Discord API.");
+            writeToLog("Connection OK => ");
         }
     });
     ws.on("close", () => {
-        console.log("API lost");
-        writeToLog("Conx KO");
+        console.log("Disconnected from the Discord API.");
+        writeToLog("Connexion KO");
         setTimeout(() => {
             attemptingReconnect = true;
             listen(); // Call the listen function to create a new WebSocket connection
-            writeToLog("Reco");
-        }, 1000 * 10);
+            writeToLog("Reconnecting...");
+        }, 1000 * 2);
     });
     ws.on("message", (data: Websocket.Data) => {
         const payload = JSON.parse(data.toLocaleString());
@@ -123,7 +123,24 @@ export const listen = (): void => {
                     const { avatar, username, id, discriminator } = author;
 
                     if (avatar?.startsWith("a_")) ext = "gif";
-                    const modifiedContent = content.replace(/<@&1173758886851919973>/g, "<@&1173761666480078889>");
+                    const modifiedContent = content
+                        .replace(/<@&1042046694461821039>/g, "<@&1174860695024705766>")
+                        .replace(/<@&1042044869281058846>/g, "<@&1174860857977614436>")
+                        .replace(/<@&1046054066972790854>/g, "<@&1174860927582097429>")
+                        .replace(/<@&1042045803306422352>/g, "<@&1174860962680033280>")
+                        .replace(/<@&1042045702525698099>/g, "<@&1174860986155532340>")
+                        .replace(/<@&1042045057806631032>/g, "<@&1174861626906783794>")
+                        .replace(/<@&1164126522429411358>/g, "<@&1174861688114270339>")
+                        .replace(/<@&1042047880933953546>/g, "<@&1174861716530679949>")
+                        .replace(/<@&1103037910145581066>/g, "<@&1174861764849045554>")
+                        .replace(/<@&1042048192302305280>/g, "<@&1174880746477981849>")
+                        .replace(/<@&1042047726680027166>/g, "<@&1175355541674012732>")
+                        .replace(/<#1026446400206143589>/g, "<#1173385962278105098>")
+                        .replace(/<#1026446456674078762>/g, "<#1173385759726768128>")
+                        .replace(/<#1026446611884290048>/g, "<#1173385612938711080>")
+                        .replace(/<#1026446478610276412>/g, "<#1173385565027180576>")
+                        .replace(/<#1026446621023686690>/g, "<#1173385614096334979>")
+                        .replace(/<#1026446591869063238>/g, "<#1173385522656325773>");
 
                     const things: Things = {
                         avatarURL: avatar
@@ -162,7 +179,7 @@ export const listen = (): void => {
         }
     });
     function writeToLog(status: string): void {
-        const logFilePath = path.join("/var/www/wealthbuilders.group", "test.log");
+        const logFilePath = path.join("/var/www/wealthbuilders.group/WWG/corner", "activealert.log");
         const logMessage = `${status} at ${new Date().toISOString()}\n`;
 
         fs.appendFile(logFilePath, logMessage, err => {
