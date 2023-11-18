@@ -123,6 +123,9 @@ export const listen = (): void => {
                     const { avatar, username, id, discriminator } = author;
 
                     if (avatar?.startsWith("a_")) ext = "gif";
+
+                    const specificLinkRegex = /https:\/\/discord\.com\/channels\/742797926761234463\/1026871730964271134\/\d+/g;
+
                     const modifiedContent = content
                         .replace(/<@&1042046694461821039>/g, "<@&1174860695024705766>")
                         .replace(/<@&1042044869281058846>/g, "<@&1174860857977614436>")
@@ -140,6 +143,11 @@ export const listen = (): void => {
                         .replace(/<#1026446611884290048>/g, "<#1173385612938711080>")
                         .replace(/<#1026446478610276412>/g, "<#1173385565027180576>")
                         .replace(/<#1026446621023686690>/g, "<#1173385614096334979>")
+                        .replace(/<#1026446506665967696>/g, "<@&1175396591847362600>")
+                        .replace(/<#1026446573342818334>/g, "<@&1174860927582097429>")
+                        .replace(/<:Long:1047616390758141973>/g, "<:Long111:1174478590201561118>")
+                        .replace(/<:Short:1047616547868381194>/g, "<:Short111:1174478849371811931>")
+                        .replace(specificLinkRegex, " - ")
                         .replace(/<#1026446591869063238>/g, "<#1173385522656325773>");
 
                     const things: Things = {
@@ -179,7 +187,7 @@ export const listen = (): void => {
         }
     });
     function writeToLog(status: string): void {
-        const logFilePath = path.join("/var/www/wealthbuilders.group/WWG/corner", "activealert.log");
+        const logFilePath = path.join("/var/www/wealthbuilders.group/WWG/corner", "activequestion.log");
         const logMessage = `${status} at ${new Date().toISOString()}\n`;
 
         fs.appendFile(logFilePath, logMessage, err => {
