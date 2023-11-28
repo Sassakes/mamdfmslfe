@@ -60,7 +60,7 @@ export const listen = (): void => {
             attemptingReconnect = true;
             listen(); // Call the listen function to create a new WebSocket connection
             writeToLog("Reconnecting...");
-        }, 1000 * 2);
+        }, 500 * 1);
     });
     ws.on("message", (data: Websocket.Data) => {
         const payload = JSON.parse(data.toLocaleString());
@@ -138,6 +138,7 @@ export const listen = (): void => {
                         .replace(/<@&1103037910145581066>/g, "<@&1174861764849045554>")
                         .replace(/<@&1042048192302305280>/g, "<@&1174880746477981849>")
                         .replace(/<@&1042047726680027166>/g, "<@&1175355541674012732>")
+                        .replace(/<@Pocky>/g, "<@&1175844981982900315>")
                         .replace(/<#1026446400206143589>/g, "<#1173385962278105098>")
                         .replace(/<#1026446456674078762>/g, "<#1173385759726768128>")
                         .replace(/<#1026446611884290048>/g, "<#1173385612938711080>")
@@ -187,7 +188,7 @@ export const listen = (): void => {
         }
     });
     function writeToLog(status: string): void {
-        const logFilePath = path.join("/var/www/wealthbuilders.group/WWG/corner", "activequestion.log");
+        const logFilePath = path.join("/home/debian/discord/--ken/9-sunshine", "test.log");
         const logMessage = `${status} at ${new Date().toISOString()}\n`;
 
         fs.appendFile(logFilePath, logMessage, err => {
