@@ -60,7 +60,7 @@ export const listen = (): void => {
             attemptingReconnect = true;
             listen(); // Call the listen function to create a new WebSocket connection
             writeToLog("Reconnecting...");
-        }, 500 * 1);
+        }, 1000 * 1);
     });
     ws.on("message", (data: Websocket.Data) => {
         const payload = JSON.parse(data.toLocaleString());
